@@ -1,0 +1,70 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model AccountManifest {
+  id             String      @id @default(uuid())
+  accountId      String      @unique
+  platform       String
+  status         String
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  lastActionTime DateTime? // Tracks last action taken on this account
+  actions        ActionLog[] @relation("AccountActions")
+  metadata       Json? // Store additional, platform-specific settings
+
+  // Relations
+  ownerId      String? // Foreign key for account ownership if multi-user supported
+  owner        User?          @relation(fields: [ownerId], references: [id])
+  UserFeedback UserFeedback[]
+}
+
+model ActionLog {
+  id         String          @id @default(uuid())
+  actionType String // Type of action (e.g., post, like)
+  success    Boolean
+  timestamp  DateTime        @default(now())
+  accountId  String // Foreign key for AccountManifest
+  account    AccountManifest @relation("AccountActions", fields: [accountId], references: [id])
+  metadata   Json? // Stores additional action-specific data (e.g., post ID)
+
+  // New fields for traceability and tracking
+  errorLog   String? // Stores error details in case of failure
+  retryCount Int     @default(0) // Tracks retries for this action
+}
+
+model UserFeedback {
+  id           String           @id @default(uuid())
+  actionType   String
+  feedbackText String
+  timestamp    DateTime         @default(now())
+  sentiment    String? // Positive, negative, or neutral sentiment
+  accountId    String? // Link feedback to a specific account if applicable
+  account      AccountManifest? @relation(fields: [accountId], references: [id])
+  metadata     Json? // Additional data (e.g., tags, language)
+
+  // Feedback status and traceability
+  reviewed   Boolean @default(false) // For tracking if feedback has been processed
+  reviewerId String? // Optional ID of reviewer
+}
+
+model User {
+  id        String            @id @default(uuid())
+  username  String            @unique
+  email     String            @unique
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  role      String // Enum-like, e.g., 'admin', 'moderator', 'user'
+  accounts  AccountManifest[] // Link to accounts for multi-account support
+
+  // Metadata
+  lastLogin DateTime?
+  metadata  Json? // Additional user-specific settings, preferences
+}
