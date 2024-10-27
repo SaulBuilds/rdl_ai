@@ -5,8 +5,6 @@ import { processInstruction } from "../../modules/autoAgentManager";
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   if (req.method === "POST") {
     const { instruction } = req.body;
-
-    // Process the instruction via the auto-agent manager
     const result = await processInstruction(instruction);
 
     if (result.success) {
@@ -18,3 +16,4 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     res.status(405).json({ message: "Method not allowed" });
   }
 }
+

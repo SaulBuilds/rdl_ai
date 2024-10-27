@@ -1,13 +1,14 @@
 export default function ActionButtons() {
     const handleAction = async (action: string) => {
-      try {
-        const res = await fetch(`/api/${action}`, { method: "POST" });
-        if (!res.ok) throw new Error("Failed to trigger action");
-      } catch (error) {
-        console.error(`Failed to ${action}:`, error);
-      }
-    };
-  
+        try {
+          console.log(`Triggering action: /api/${action}`);  // Add this line for debugging
+          const res = await fetch(`/api/${action}`, { method: "POST" });
+          if (!res.ok) throw new Error("Failed to trigger action");
+        } catch (error) {
+          console.error(`Failed to ${action}:`, error);
+        }
+      };
+      
     return (
       <div className="action-buttons space-x-4">
         <button

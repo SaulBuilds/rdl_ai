@@ -1,8 +1,8 @@
-// src/components/InstructionForm.tsx
 import { useState } from "react";
 
 export default function InstructionForm() {
   const [instruction, setInstruction] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -12,10 +12,18 @@ export default function InstructionForm() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ instruction }),
       });
-      if (!res.ok) throw new Error("Instruction submission failed");
-      setInstruction(""); // Clear form on success
+      
+      if (!res.ok) {
+        const errorText = await res.text(); // Retrieve additional error info if available
+        throw new Error(`Instruction submission failed: ${res.status} ${errorText}`);
+      }
+
+      setInstruction(""); // Clear the form on success
+      setError(null); // Clear any previous errors
     } catch (error) {
-      console.error("Failed to submit instruction:", error);
+      const errorMsg = error instanceof Error ? error.message : "Failed to submit instruction.";
+      console.error("Failed to submit instruction:", errorMsg);
+      setError(errorMsg); // Display detailed error message to the user
     }
   };
 
@@ -34,6 +42,7 @@ export default function InstructionForm() {
       >
         Submit Instruction
       </button>
+      {error && <p className="text-red-500">{error}</p>}
     </form>
   );
 }
